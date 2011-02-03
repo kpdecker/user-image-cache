@@ -7,12 +7,29 @@ $(document).ready(function(){
           IMAGE_URL = "http://static.incaseofstairs.com/themes/pixeled/images/promotejsh.gif",
           MOCK_NAME = "/mockFile";
 
+    var originalFile = window.File,
+        originalReader = window.FileReader;
+
     module("UserImageCache", {
         setup: function() {
             UserImageCache.setImageEl(document.getElementById("load-image"));
+            window.File = function() {
+                this.name = MOCK_NAME;
+                this.toString = function() {
+                    return "Mock File";
+                };
+            };
+            window.FileReader = function() {
+                this.readAsDataURL = function(file) {
+                    this.result = ONE_PX_IMAGE;
+                    this.onload();
+                };
+            };
         },
         teardown: function() {
             UserImageCache.reset();
+            window.File = originalFile;
+            window.FileReader = originalReader;
         }
     });
 
