@@ -95,7 +95,7 @@ var UserImageCache;
         /**
          * Sets the element that images will be loaded into.
          */
-        setEl: function(el) {
+        setImageEl: function(el) {
             image = el;
         },
 
