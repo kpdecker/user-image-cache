@@ -80,4 +80,40 @@ $(document).ready(function(){
             start();
         });
     });
+
+    test("load Data URI", function() {
+        expect(3);
+
+        UserImageCache.load(ONE_PX_IMAGE, function(error) {
+            ok(false, "Exception occured: " + error);
+        });
+
+        equals(UserImageCache.getEntryId(), ONE_PX_IMAGE, "getEntryName");
+        equals(UserImageCache.getDisplayName(), ONE_PX_IMAGE, "getDisplayName");
+        equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
+    });
+
+    test("load Data URI", function() {
+        expect(3);
+
+        UserImageCache.load(IMAGE_URL, function(error) {
+            ok(false, "Exception occured: " + error);
+        });
+
+        equals(UserImageCache.getEntryId(), IMAGE_URL, "getEntryName");
+        equals(UserImageCache.getDisplayName(), IMAGE_URL, "getDisplayName");
+        equals(UserImageCache.getSrc(), IMAGE_URL, "getSrc");
+    });
+
+    test("load Mock File", function() {
+        expect(3);
+
+        UserImageCache.load(new File(), function(error) {
+            ok(false, "Exception occured: " + error);
+        });
+
+        equals(UserImageCache.getEntryId(), "page-store://1", "getEntryName");
+        equals(UserImageCache.getDisplayName(), MOCK_NAME, "getDisplayName");
+        equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
+    });
 });
