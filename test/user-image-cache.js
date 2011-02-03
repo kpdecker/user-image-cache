@@ -3,7 +3,14 @@
  * See LICENSE for license information
  */
 $(document).ready(function(){
-    module("UserImageCache");
+    module("UserImageCache", {
+        setup: function() {
+            UserImageCache.setImageEl(document.getElementById("load-image"));
+        },
+        teardown: function() {
+            UserImageCache.reset();
+        }
+    });
 
     test("initState", function() {
         expect(5);
