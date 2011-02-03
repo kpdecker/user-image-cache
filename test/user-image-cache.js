@@ -33,6 +33,11 @@ $(document).ready(function(){
         }
     });
 
+    test("isLocalSupported", function() {
+        expect(1);
+        equals(UserImageCache.isLocalSupported(), true, "isLocalSupported");
+    });
+
     test("initState", function() {
         expect(5);
         UserImageCache.reset();
