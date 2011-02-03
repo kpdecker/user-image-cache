@@ -5,6 +5,7 @@
 $(document).ready(function(){
     const ONE_PX_IMAGE = "data:image/gif;base64,R0lGODlhAQABAIABAP///wAAACwAAAAAAQABAAACAkQBADs=",
           IMAGE_URL = "http://static.incaseofstairs.com/themes/pixeled/images/promotejsh.gif",
+          VALID_PAGE_STORE = "page-store://1",
           MOCK_NAME = "/mockFile";
 
     var originalFile = window.File,
@@ -112,7 +113,7 @@ $(document).ready(function(){
             ok(false, "Exception occured: " + error);
         });
 
-        equals(UserImageCache.getEntryId(), "page-store://1", "getEntryName");
+        equals(UserImageCache.getEntryId(), VALID_PAGE_STORE, "getEntryName");
         equals(UserImageCache.getDisplayName(), MOCK_NAME, "getDisplayName");
         equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
     });
