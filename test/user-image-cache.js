@@ -94,6 +94,27 @@ $(document).ready(function(){
         equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
     });
 
+    asyncTest("invalidFile", function() {
+        expect(4);
+
+        window.FileReader = function() {
+            this.readAsDataURL = function(file) {
+                this.error = "mockFailure";
+                this.onerror();
+            };
+        };
+
+        UserImageCache.load(new File(), function(error) {
+            equals(error, "mockFailure", "Invalid file callback: mockFailure");
+
+            equals(UserImageCache.getEntryId(), undefined, "getEntryName");
+            equals(UserImageCache.getDisplayName(), undefined, "getDisplayName");
+            equals(UserImageCache.getSrc(), undefined, "getSrc");
+
+            start();
+        });
+    });
+
     test("load Data URI", function() {
         expect(3);
 
@@ -116,5 +137,55 @@ $(document).ready(function(){
         equals(UserImageCache.getEntryId(), VALID_PAGE_STORE, "getEntryName");
         equals(UserImageCache.getDisplayName(), MOCK_NAME, "getDisplayName");
         equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
+    });
+
+    test("Reload Mock File", function() {
+        expect(9);
+
+        UserImageCache.load(new File(), function(error) {
+            ok(false, "Exception occured: " + error);
+        });
+
+        equals(UserImageCache.getEntryId(), VALID_PAGE_STORE, "getEntryName");
+        equals(UserImageCache.getDisplayName(), MOCK_NAME, "getDisplayName");
+        equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
+
+        UserImageCache.load(IMAGE_URL, function(error) {
+            ok(false, "Exception occured: " + error);
+        });
+
+        equals(UserImageCache.getEntryId(), IMAGE_URL, "getEntryName");
+        equals(UserImageCache.getDisplayName(), IMAGE_URL, "getDisplayName");
+        equals(UserImageCache.getSrc(), IMAGE_URL, "getSrc");
+
+        UserImageCache.load(VALID_PAGE_STORE, function(error) {
+            ok(false, "Exception occured: " + error);
+        });
+
+        equals(UserImageCache.getEntryId(), VALID_PAGE_STORE, "getEntryName");
+        equals(UserImageCache.getDisplayName(), MOCK_NAME, "getDisplayName");
+        equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
+    });
+
+    asyncTest("invalidObjectLoaded", function() {
+        expect(7);
+
+        UserImageCache.load(ONE_PX_IMAGE, function(error) {
+            ok(false, "Exception occured: " + error);
+        });
+
+        equals(UserImageCache.getEntryId(), ONE_PX_IMAGE, "getEntryName");
+        equals(UserImageCache.getDisplayName(), ONE_PX_IMAGE, "getDisplayName");
+        equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
+
+        UserImageCache.load({}, function(error) {
+            equals(error, UserImageCache.UNKNOWN_TYPE, "Invalid object callback: unknown_type");
+
+            equals(UserImageCache.getEntryId(), ONE_PX_IMAGE, "getEntryName");
+            equals(UserImageCache.getDisplayName(), ONE_PX_IMAGE, "getDisplayName");
+            equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
+
+            start();
+        });
     });
 });
