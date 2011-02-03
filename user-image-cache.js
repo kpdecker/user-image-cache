@@ -53,6 +53,9 @@ var UserImageCache;
         NOT_FOUND: "not_found",
         UNKNOWN_TYPE: "unknown_type",
 
+        /**
+         * Determines if local file reads are possible in the current execution environment.
+         */
         isLocalSupported: function() {
             try {
                 return !!window.FileReader;
@@ -61,14 +64,44 @@ var UserImageCache;
             }
         },
 
-        getCurEntry: function() { return curEntry && curEntry.entryId; },
+        /**
+         * Retrieves the entry id for the current entry, if one is defined.
+         * This value may be passed to the load method to reload the image
+         * if it is still cached.
+         */
+        getEntryId: function() { return curEntry && curEntry.entryId; },
+
+        /**
+         * Retrieves the display name for the current entry, if one is defined.
+         */
         getDisplayName: function() { return curEntry && curEntry.displayName; },
+
+        /**
+         * Retrieves the src URI for the current entry, if one is defined.
+         */
         getSrc: function() { return curEntry && curEntry.src },
 
+        /**
+         * Sets the element that images will be loaded into.
+         */
         setEl: function(el) {
             image = el;
         },
 
+        /**
+         * Loads a given image.
+         *
+         * @param file may be one of:
+         *  - File object (if supported)
+         *  - Image URI
+         *  - Entry ID returned by getEntryId for a previous image
+         *
+         * @param onError(error) optional callback that is executed if the image can not be loaded
+         *      Errors include:
+         *          - UserImageCache.NOT_FOUND : Unable to lookup cached image element.
+         *          - UserImageCache.UNKNOWN_TYPE : File is unknown type
+         *          - Result of FileReader.error
+         */
         load: function(file, onError) {
             // the file from the session store if that is the case
             if (typeof file === "string") {
