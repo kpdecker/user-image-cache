@@ -3,6 +3,10 @@
  * See LICENSE for license information
  */
 $(document).ready(function(){
+    const ONE_PX_IMAGE = "data:image/gif;base64,R0lGODlhAQABAIABAP///wAAACwAAAAAAQABAAACAkQBADs=",
+          IMAGE_URL = "http://static.incaseofstairs.com/themes/pixeled/images/promotejsh.gif",
+          MOCK_NAME = "/mockFile";
+
     module("UserImageCache", {
         setup: function() {
             UserImageCache.setImageEl(document.getElementById("load-image"));
