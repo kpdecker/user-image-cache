@@ -52,4 +52,32 @@ $(document).ready(function(){
         UserImageCache.setImageEl(document.getElementById("load-image"));
         ok(true, "setImageEl Success");
     });
+
+    asyncTest("cacheFail", function() {
+        expect(4);
+
+        UserImageCache.load("page-store://invalid", function(error) {
+            equals(error, UserImageCache.NOT_FOUND, "Invalid cache callback: not_found");
+
+            equals(UserImageCache.getEntryId(), undefined, "getEntryName");
+            equals(UserImageCache.getDisplayName(), undefined, "getDisplayName");
+            equals(UserImageCache.getSrc(), undefined, "getSrc");
+
+            start();
+        });
+    });
+
+    asyncTest("invalidObject", function() {
+        expect(4);
+
+        UserImageCache.load({}, function(error) {
+            equals(error, UserImageCache.UNKNOWN_TYPE, "Invalid object callback: unknown_type");
+
+            equals(UserImageCache.getEntryId(), undefined, "getEntryName");
+            equals(UserImageCache.getDisplayName(), undefined, "getDisplayName");
+            equals(UserImageCache.getSrc(), undefined, "getSrc");
+
+            start();
+        });
+    });
 });
