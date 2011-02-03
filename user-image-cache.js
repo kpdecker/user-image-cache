@@ -23,8 +23,16 @@ var UserImageCache;
         if (supportsSessionStorage()) {
             // If they support FileReader they really should support storage... but who knows (With the exception of file://)
             return {
+                reset: function() {
+                    var len = (parseInt(sessionStorage["imageList-count"], 10)||0);
+                    while (len--) {
+                        sessionStorage.removeItem("imageList-src-" + len);
+                        sessionStorage.removeItem("imageList-display-" + len);
+                    }
+                    sessionStorage.removeItem("imageList-count");
+                },
                 storeImage: function(name, data) {
-                    var entryId = (parseInt(sessionStorage["imageList-count"])||0)+1;
+                    var entryId = (parseInt(sessionStorage["imageList-count"], 10)||0)+1;
                     sessionStorage["imageList-count"] = entryId;
                     sessionStorage["imageList-src-" + entryId] = data;
                     sessionStorage["imageList-display-" + entryId] = name;
@@ -38,6 +46,9 @@ var UserImageCache;
             // Fail over to plain js structures, meaing that refresh, etc will cause failures.
             var cache = [];
             return {
+                reset: function() {
+                    cache = [];
+                },
                 storeImage: function(name, data) {
                     cache.push({ src: data, displayName: name });
                     return cache.length-1;
@@ -135,5 +146,11 @@ var UserImageCache;
                 onError && onError(UserImageCache.UNKNOWN_TYPE);
             }
         },
+
+        reset: function() {
+            localDataBinding.reset();
+            image = undefined;
+            curEntry = undefined;
+        }
     };
 })();
