@@ -114,6 +114,10 @@ var UserImageCache;
          *          - Result of FileReader.error
          */
         load: function(file, onError) {
+            if (!image) {
+                throw new Error("Must call setImageEl prior to attempting to load an image");
+            }
+
             // the file from the session store if that is the case
             if (typeof file === "string") {
                 var match = /^page-store:\/\/(.*)$/.exec(file);
