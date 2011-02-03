@@ -5,7 +5,7 @@
 // Specs in use:
 // http://www.w3.org/TR/FileAPI/
 // http://www.w3.org/TR/webstorage/
-var ImageList;
+var UserImageCache;
 (function() {
     var curEntry,
         image;
@@ -49,7 +49,7 @@ var ImageList;
         }
     })();
 
-    ImageList = {
+    UserImageCache = {
         NOT_FOUND: "not_found",
         UNKNOWN_TYPE: "unknown_type",
 
@@ -78,28 +78,28 @@ var ImageList;
                     if (!curEntry) {
                         // We could not find the cache data. This could be due to a refresh in the local case,
                         // or due to someone attempting to paste a URL that uses a local reference.
-                        onError && onError(ImageList.NOT_FOUND);
+                        onError && onError(UserImageCache.NOT_FOUND);
                         return;
                     }
                     curEntry.entryId = "page-store://" + match[1];
                 } else {
                     curEntry = { entryId: file, src: file, displayName: file };
                 }
-                image.src = ImageList.getSrc();
+                image.src = UserImageCache.getSrc();
             } else if (this.isLocalSupported() && file instanceof File) {
                 var reader = new FileReader();
                 reader.onload = function(event) {
                     var entryId = localDataBinding.storeImage(file.name || file.fileName, reader.result);  // std || impl to be safe
                     curEntry = localDataBinding.getImage(entryId);
                     curEntry.entryId = "page-store://" + entryId;
-                    image.src = ImageList.getSrc();
+                    image.src = UserImageCache.getSrc();
                 };
                 reader.onerror = function(event) {
                     onError && onError(reader.error);
                 };
                 reader.readAsDataURL(file);
             } else {
-                onError && onError(ImageList.UNKNOWN_TYPE);
+                onError && onError(UserImageCache.UNKNOWN_TYPE);
             }
         },
     };
