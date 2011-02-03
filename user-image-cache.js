@@ -123,7 +123,7 @@ var UserImageCache;
                 var match = /^page-store:\/\/(.*)$/.exec(file);
                 if (this.isLocalSupported() && match) {
                     curEntry = localDataBinding.getImage(match[1]);
-                    if (!curEntry) {
+                    if (!curEntry || !curEntry.src) {
                         // We could not find the cache data. This could be due to a refresh in the local case,
                         // or due to someone attempting to paste a URL that uses a local reference.
                         onError && onError(UserImageCache.NOT_FOUND);
