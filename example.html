@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>user-image-cache example</title>
+
+    <style type="text/css">
+        .no-local .localDependent {
+            display: none;
+        }
+
+        #imageEl {
+            max-width: 300px;
+            max-height: 300px;
+        }
+        /* File Input Click Handler: See http://www.quirksmode.org/dom/inputfile.html */
+        .fileInput {
+            position: relative;
+        }
+
+        .fileInput > input[type="button"] {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            z-index: 1;
+        }
+
+        .fileInput > input[type='file'] {
+            position: relative;
+            text-align: right;
+            opacity: 0;
+            z-index: 2;
+        }
+    </style>
+</head>
+<body class="no-local">
+    <div>
+        <label for="pathToImage">Image:</label><input type="text" id="pathToImage">
+        <span class="fileInput localDependent">
+            <input type="button" value="Browse...">
+            <input type="file" accept="image/*" id="localImage">
+        </span>
+    </div>
+
+    <ul id="cacheList"></ul>
+    <div id="errorMsg"></div>
+    <img id="imageEl">
+
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"></script>
+    <script type="text/javascript" src="user-image-cache.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            function errorHandler(code) {
+                $("#errorMsg").html("*** " + "Failed to load image. Error code: " + JSON.stringify(code));
+            }
+
+            var pathToImage = $("#pathToImage"),
+                imageEl = $("#imageEl"),
+                cacheList = $("#cacheList");
+
+            // Init the loader
+            UserImageCache.setImageEl(imageEl[0]);
+
+            // On image load record the entry information so the user can restore
+            imageEl.load(function() {
+                if (!cacheList.find("[data-entryid=\"" + UserImageCache.getEntryId() + "\"]").length) {
+                    cacheList.append(
+                        $("<li><a data-entryid=\"" + UserImageCache.getEntryId() + "\" href=\"#\">"
+                            + UserImageCache.getDisplayName()
+                            + "</a></li>"));
+                }
+            });
+            imageEl.error(function() { errorHandler(); });
+
+            $("#cacheList").delegate("a", "click", function() {
+                var entryId = $(this).data("entryid");
+                $("#errorMsg").html("");
+                UserImageCache.load(entryId, errorHandler);
+            });
+
+            // User Input Setup
+            pathToImage.change(function(event) {
+                $("#errorMsg").html("");
+                UserImageCache.load(pathToImage.val(), errorHandler);
+            });
+
+            if (UserImageCache.isLocalSupported()) {
+                $("#localImage").bind("change", function(event) {
+                    var file = this.files[0];
+
+                    $("#errorMsg").html("");
+                    UserImageCache.load(file, errorHandler);
+                });
+
+                // Unhide the browse button if the current browser supports local files
+                $(".no-local").removeClass("no-local");
+            }
+        });
+    </script>
+</body>
+</html>
