@@ -11,11 +11,11 @@ $(document).ready(function(){
     var originalFile = window.File,
         originalReader = window.FileReader;
 
-    module("UserImageCache", {
     function loadFailed(error) {
         ok(false, "Exception occured: " + error);
     }
 
+    var userImageLifecycle = {
         setup: function() {
             UserImageCache.setImageEl(document.getElementById("load-image"));
             window.File = function() {
@@ -36,7 +36,9 @@ $(document).ready(function(){
             window.File = originalFile;
             window.FileReader = originalReader;
         }
-    });
+    };
+
+    module("UserImageCache", userImageLifecycle);
 
     test("isLocalSupported", function() {
         expect(1);
@@ -52,7 +54,7 @@ $(document).ready(function(){
 
         raises(function() {
             UserImageCache.load(ONE_PX_IMAGE);
-        }, "Must throw if setImageEl has not been defined")
+        }, "Must throw if setImageEl has not been defined");
 
         UserImageCache.setImageEl(document.getElementById("load-image"));
         ok(true, "setImageEl Success");
@@ -174,6 +176,180 @@ $(document).ready(function(){
             equals(UserImageCache.getEntryId(), ONE_PX_IMAGE, "getEntryName");
             equals(UserImageCache.getDisplayName(), ONE_PX_IMAGE, "getDisplayName");
             equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
+
+            start();
+        });
+    });
+
+    var originalStorage,
+        curStorage,
+        mockStore = {},
+        setCount = 0;
+
+    module("UserImageCache", {
+        setup: function() {
+            userImageLifecycle.setup();
+
+            try {
+                if (window.sessionStorage) {
+                    originalStorage = window.sessionStorage;
+                    __defineGetter__("sessionStorage", function() {
+                        return curStorage;
+                    });
+
+                    curStorage = {
+                        getItem: function(name) {
+                            return originalStorage.getItem(name);
+                        },
+                        setItem: function(name, value) {
+                            if (name.indexOf("imageList-display") === 0 || name.indexOf("imageList-src") === 0) {
+                                if (setCount > 3) {
+                                    throw new Error();
+                                }
+                                setCount++;
+                            }
+
+                            originalStorage.setItem(name, value);
+                        },
+                        removeItem: function(name) {
+                            if (name.indexOf("imageList-display") === 0 || name.indexOf("imageList-src") === 0) {
+                                setCount--;
+                            }
+                            originalStorage.removeItem(name);
+                        }
+                    };
+                }
+            } catch (err) {}
+        },
+        teardown: function() {
+            userImageLifecycle.teardown();
+
+            if (originalStorage) {
+                curStorage = originalStorage;
+            }
+            setCount = 0;
+        }
+    });
+
+    asyncTest("cacheRemoval", function() {
+        // Skip this test if we are not using sessionStorage
+        if (!originalStorage) {
+            return;
+        }
+        expect(11);
+
+        // Load enough entries to hit our fake quota
+        UserImageCache.load(new File(), loadFailed);
+        var firstEntry = UserImageCache.getEntryId();
+        equals(firstEntry, "page-store://1", "First Entry Id");
+
+        UserImageCache.load(new File(), loadFailed);
+        var secondEntry = UserImageCache.getEntryId();
+        equals(secondEntry, "page-store://2", "Second Entry Id");
+
+        UserImageCache.load(new File(), loadFailed);
+        var thirdEntry = UserImageCache.getEntryId();
+        equals(thirdEntry, "page-store://3", "Third Entry Id");
+
+        // Verify that the last two are still in the cache
+        UserImageCache.load("page-store://2", loadFailed);
+        equals(UserImageCache.getEntryId(), "page-store://2", "getEntryId");
+        equals(UserImageCache.getDisplayName(), MOCK_NAME, "getDisplayName");
+        equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
+
+        UserImageCache.load("page-store://3", loadFailed);
+        equals(UserImageCache.getEntryId(), "page-store://3", "getEntryId");
+        equals(UserImageCache.getDisplayName(), MOCK_NAME, "getDisplayName");
+        equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
+
+        // Now attempt to reload the first one. This should have been pushed out of the cache
+        UserImageCache.load("page-store://1", function(error) {
+            equals(error, UserImageCache.NOT_FOUND, "Invalid cache callback: not_found");
+
+            equals(UserImageCache.getEntryId(), "page-store://3", "getEntryId");
+
+            start();
+        });
+    });
+
+    asyncTest("cacheRemovalOrder", function() {
+        // Skip this test if we are not using sessionStorage
+        if (!originalStorage) {
+            return;
+        }
+        expect(12);
+
+        // Load enough entries to hit our fake quota
+        UserImageCache.load(new File(), loadFailed);
+        var firstEntry = UserImageCache.getEntryId();
+        equals(firstEntry, "page-store://1", "First Entry Id");
+
+        UserImageCache.load(new File(), loadFailed);
+        var secondEntry = UserImageCache.getEntryId();
+        equals(secondEntry, "page-store://2", "Second Entry Id");
+
+        // Reload the first element to push 2 to the last used state
+        UserImageCache.load("page-store://1", loadFailed);
+        equals(UserImageCache.getEntryId(), "page-store://1", "getEntryId");
+
+        UserImageCache.load(new File(), loadFailed);
+        var thirdEntry = UserImageCache.getEntryId();
+        equals(thirdEntry, "page-store://3", "Third Entry Id");
+
+        // Verify that the last two are still in the cache
+        UserImageCache.load("page-store://1", loadFailed);
+        equals(UserImageCache.getEntryId(), "page-store://1", "getEntryId");
+        equals(UserImageCache.getDisplayName(), MOCK_NAME, "getDisplayName");
+        equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
+
+        UserImageCache.load("page-store://3", loadFailed);
+        equals(UserImageCache.getEntryId(), "page-store://3", "getEntryId");
+        equals(UserImageCache.getDisplayName(), MOCK_NAME, "getDisplayName");
+        equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
+
+        // Now attempt to reload the first one. This should have been pushed out of the cache
+        UserImageCache.load("page-store://2", function(error) {
+            equals(error, UserImageCache.NOT_FOUND, "Invalid cache callback: not_found");
+
+            equals(UserImageCache.getEntryId(), "page-store://3", "getEntryId");
+
+            start();
+        });
+    });
+
+    asyncTest("largerThanStorage", function() {
+        // Skip this test if we are not using sessionStorage
+        if (!originalStorage) {
+            return;
+        }
+        expect(11);
+
+        setCount = 4;
+
+        // Load enough entries to hit our fake quota
+        UserImageCache.load(new File(), loadFailed);
+        var firstEntry = UserImageCache.getEntryId();
+        equals(firstEntry, "page-store://1", "First Entry Id");
+        equals(UserImageCache.getDisplayName(), MOCK_NAME, "getDisplayName");
+        equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
+
+        UserImageCache.load(new File(), loadFailed);
+        var secondEntry = UserImageCache.getEntryId();
+        equals(secondEntry, "page-store://2", "Second Entry Id");
+        equals(UserImageCache.getDisplayName(), MOCK_NAME, "getDisplayName");
+        equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
+
+        // Reload the first element to push 2 to the last used state
+        UserImageCache.load("page-store://2", loadFailed);
+        equals(UserImageCache.getEntryId(), "page-store://2", "getEntryId");
+        equals(UserImageCache.getDisplayName(), MOCK_NAME, "getDisplayName");
+        equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
+
+        // Now attempt to reload the first one. This should have been pushed out of the cache
+        UserImageCache.load("page-store://1", function(error) {
+            equals(error, UserImageCache.NOT_FOUND, "Invalid cache callback: not_found");
+
+            equals(UserImageCache.getEntryId(), "page-store://2", "getEntryId");
 
             start();
         });

@@ -23,23 +23,78 @@ var UserImageCache;
         if (supportsSessionStorage()) {
             // If they support FileReader they really should support storage... but who knows (With the exception of file://)
             return {
+                count: function() {
+                    return parseInt(sessionStorage.getItem("imageList-count"), 10)||0;
+                },
+                lru: function(set) {
+                    if (set) {
+                        sessionStorage.setItem("imageList-lru", set.join(","));
+                    } else {
+                        var lru = sessionStorage.getItem("imageList-lru")||"";
+                        if (!lru) {
+                            return [];
+                        } else {
+                            return lru.split(",");
+                        }
+                    }
+                },
                 reset: function() {
-                    var len = (parseInt(sessionStorage["imageList-count"], 10)||0);
-                    while (len--) {
+                    var len = this.count()+1;
+                    while (--len) {
                         sessionStorage.removeItem("imageList-src-" + len);
                         sessionStorage.removeItem("imageList-display-" + len);
                     }
+                    sessionStorage.removeItem("imageList-lru");
                     sessionStorage.removeItem("imageList-count");
                 },
                 storeImage: function(name, data) {
-                    var entryId = (parseInt(sessionStorage["imageList-count"], 10)||0)+1;
-                    sessionStorage["imageList-count"] = entryId;
-                    sessionStorage["imageList-src-" + entryId] = data;
-                    sessionStorage["imageList-display-" + entryId] = name;
+                    var count = this.count(),
+                        entryId = count+1;
+
+                    do {
+                        try {
+                            sessionStorage.setItem("imageList-src-" + entryId, data);
+                            sessionStorage.setItem("imageList-display-" + entryId, name);
+
+                            var lru = self.lru();
+                            lru.push(entryId);
+                            self.lru(lru);
+
+                            break;
+                        } catch (err) {
+                            // Cache filled, remove the least recently used
+                            var lru = this.lru();
+                            sessionStorage.removeItem("imageList-src-" + lru[0]);
+                            sessionStorage.removeItem("imageList-display-" + lru[0]);
+                            lru.shift();
+                            this.lru(lru);
+
+                            // Also cleanup any data that may have made it in
+                            sessionStorage.removeItem("imageList-src-" + entryId);
+                            sessionStorage.removeItem("imageList-display-" + entryId);
+
+                            count--;
+                        }
+                    } while (count > 0);
+
+                    sessionStorage.setItem("imageList-count", entryId);
                     return entryId;
                 },
                 getImage: function(entryId) {
-                    return { src: sessionStorage["imageList-src-" + entryId], displayName: sessionStorage["imageList-display-" + entryId] };
+                    var ret = {
+                        src: sessionStorage.getItem("imageList-src-" + entryId),
+                        displayName: sessionStorage.getItem("imageList-display-" + entryId)
+                    };
+
+                    var lru = this.lru().filter(function(a) {
+                        return a != entryId;
+                    });
+                    if (ret.src) {
+                        lru.push(entryId);
+                    }
+                    this.lru(lru);
+
+                    return ret;
                 }
             };
         } else {
@@ -90,7 +145,7 @@ var UserImageCache;
         /**
          * Retrieves the src URI for the current entry, if one is defined.
          */
-        getSrc: function() { return curEntry && curEntry.src },
+        getSrc: function() { return curEntry && curEntry.src; },
 
         /**
          * Sets the element that images will be loaded into.
@@ -140,6 +195,10 @@ var UserImageCache;
                 reader.onload = function(event) {
                     var entryId = localDataBinding.storeImage(file.name || file.fileName, reader.result);  // std || impl to be safe
                     curEntry = localDataBinding.getImage(entryId);
+                    if (!curEntry || !curEntry.src) {
+                        // The file is too large for the remaining data
+                        curEntry = {src: reader.result, displayName: file.name || file.fileName};
+                    }
                     curEntry.entryId = "page-store://" + entryId;
                     image.src = UserImageCache.getSrc();
                 };
