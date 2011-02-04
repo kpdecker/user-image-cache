@@ -51,10 +51,10 @@ var UserImageCache;
                 },
                 storeImage: function(name, data) {
                     cache.push({ src: data, displayName: name });
-                    return cache.length-1;
+                    return cache.length;
                 },
                 getImage: function(entryId) {
-                    return cache[entryId];
+                    return cache[entryId-1];
                 }
             };
         }
