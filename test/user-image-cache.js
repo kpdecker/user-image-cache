@@ -12,6 +12,10 @@ $(document).ready(function(){
         originalReader = window.FileReader;
 
     module("UserImageCache", {
+    function loadFailed(error) {
+        ok(false, "Exception occured: " + error);
+    }
+
         setup: function() {
             UserImageCache.setImageEl(document.getElementById("load-image"));
             window.File = function() {
@@ -85,9 +89,7 @@ $(document).ready(function(){
     test("load Data URI", function() {
         expect(3);
 
-        UserImageCache.load(ONE_PX_IMAGE, function(error) {
-            ok(false, "Exception occured: " + error);
-        });
+        UserImageCache.load(ONE_PX_IMAGE, loadFailed);
 
         equals(UserImageCache.getEntryId(), ONE_PX_IMAGE, "getEntryName");
         equals(UserImageCache.getDisplayName(), ONE_PX_IMAGE, "getDisplayName");
@@ -118,9 +120,7 @@ $(document).ready(function(){
     test("load Data URI", function() {
         expect(3);
 
-        UserImageCache.load(IMAGE_URL, function(error) {
-            ok(false, "Exception occured: " + error);
-        });
+        UserImageCache.load(IMAGE_URL, loadFailed);
 
         equals(UserImageCache.getEntryId(), IMAGE_URL, "getEntryName");
         equals(UserImageCache.getDisplayName(), IMAGE_URL, "getDisplayName");
@@ -130,9 +130,7 @@ $(document).ready(function(){
     test("load Mock File", function() {
         expect(3);
 
-        UserImageCache.load(new File(), function(error) {
-            ok(false, "Exception occured: " + error);
-        });
+        UserImageCache.load(new File(), loadFailed);
 
         equals(UserImageCache.getEntryId(), VALID_PAGE_STORE, "getEntryName");
         equals(UserImageCache.getDisplayName(), MOCK_NAME, "getDisplayName");
@@ -142,25 +140,19 @@ $(document).ready(function(){
     test("Reload Mock File", function() {
         expect(9);
 
-        UserImageCache.load(new File(), function(error) {
-            ok(false, "Exception occured: " + error);
-        });
+        UserImageCache.load(new File(), loadFailed);
 
         equals(UserImageCache.getEntryId(), VALID_PAGE_STORE, "getEntryName");
         equals(UserImageCache.getDisplayName(), MOCK_NAME, "getDisplayName");
         equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
 
-        UserImageCache.load(IMAGE_URL, function(error) {
-            ok(false, "Exception occured: " + error);
-        });
+        UserImageCache.load(IMAGE_URL, loadFailed);
 
         equals(UserImageCache.getEntryId(), IMAGE_URL, "getEntryName");
         equals(UserImageCache.getDisplayName(), IMAGE_URL, "getDisplayName");
         equals(UserImageCache.getSrc(), IMAGE_URL, "getSrc");
 
-        UserImageCache.load(VALID_PAGE_STORE, function(error) {
-            ok(false, "Exception occured: " + error);
-        });
+        UserImageCache.load(VALID_PAGE_STORE, loadFailed);
 
         equals(UserImageCache.getEntryId(), VALID_PAGE_STORE, "getEntryName");
         equals(UserImageCache.getDisplayName(), MOCK_NAME, "getDisplayName");
@@ -170,9 +162,7 @@ $(document).ready(function(){
     asyncTest("invalidObjectLoaded", function() {
         expect(7);
 
-        UserImageCache.load(ONE_PX_IMAGE, function(error) {
-            ok(false, "Exception occured: " + error);
-        });
+        UserImageCache.load(ONE_PX_IMAGE, loadFailed);
 
         equals(UserImageCache.getEntryId(), ONE_PX_IMAGE, "getEntryName");
         equals(UserImageCache.getDisplayName(), ONE_PX_IMAGE, "getDisplayName");
