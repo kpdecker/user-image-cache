@@ -122,14 +122,15 @@ var UserImageCache;
             if (typeof file === "string") {
                 var match = /^page-store:\/\/(.*)$/.exec(file);
                 if (this.isLocalSupported() && match) {
-                    curEntry = localDataBinding.getImage(match[1]);
-                    if (!curEntry || !curEntry.src) {
+                    var loadEntry = localDataBinding.getImage(match[1]);
+                    if (!loadEntry || !loadEntry.src) {
                         // We could not find the cache data. This could be due to a refresh in the local case,
                         // or due to someone attempting to paste a URL that uses a local reference.
                         onError && onError(UserImageCache.NOT_FOUND);
                         return;
                     }
-                    curEntry.entryId = "page-store://" + match[1];
+                    loadEntry.entryId = "page-store://" + match[1];
+                    curEntry = loadEntry;
                 } else {
                     curEntry = { entryId: file, src: file, displayName: file };
                 }
