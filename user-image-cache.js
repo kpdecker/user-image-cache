@@ -56,9 +56,9 @@ var UserImageCache;
                             sessionStorage.setItem("imageList-src-" + entryId, data);
                             sessionStorage.setItem("imageList-display-" + entryId, name);
 
-                            var lru = self.lru();
+                            var lru = this.lru();
                             lru.push(entryId);
-                            self.lru(lru);
+                            this.lru(lru);
 
                             break;
                         } catch (err) {
