@@ -8,6 +8,7 @@
 var UserImageCache;
 (function() {
     var curEntry,
+        remoteProxyUrl,
         image;
 
     // Check for browser support of session storage and that it is accessible
@@ -155,6 +156,14 @@ var UserImageCache;
             image = el;
         },
 
+        /*
+         * Sets the URL of the proxy server for loading remote URLs. On load the
+         * file href URL will be appended to the remote proxy url, if defined.
+         */
+        setRemoteProxy: function(proxyUrl) {
+            remoteProxyUrl = proxyUrl;
+        },
+
         /**
          * Loads a given image.
          *
@@ -188,7 +197,11 @@ var UserImageCache;
                     loadEntry.entryId = "page-store://" + match[1];
                     curEntry = loadEntry;
                 } else {
-                    curEntry = { entryId: file, src: file, displayName: file };
+                    var srcUrl = file;
+                    if (remoteProxyUrl && /https?:\/\/.*/.test(file)) {
+                        srcUrl = remoteProxyUrl + encodeURIComponent(file);
+                    }
+                    curEntry = { entryId: file, src: srcUrl, displayName: file };
                 }
                 image.src = UserImageCache.getSrc();
             } else if (this.isLocalSupported() && file instanceof File) {
@@ -216,6 +229,7 @@ var UserImageCache;
             localDataBinding.reset();
             image = undefined;
             curEntry = undefined;
+            remoteProxyUrl = undefined;
         }
     };
 })();

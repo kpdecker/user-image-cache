@@ -6,7 +6,8 @@ $(document).ready(function(){
     const ONE_PX_IMAGE = "data:image/gif;base64,R0lGODlhAQABAIABAP///wAAACwAAAAAAQABAAACAkQBADs=",
           IMAGE_URL = "http://static.incaseofstairs.com/themes/pixeled/images/promotejsh.gif",
           VALID_PAGE_STORE = "page-store://1",
-          MOCK_NAME = "/mockFile";
+          MOCK_NAME = "/mockFile",
+          REMOTE_PROXY = "proxy:";
 
     var originalFile = window.File,
         originalReader = window.FileReader;
@@ -119,7 +120,7 @@ $(document).ready(function(){
         });
     });
 
-    test("load Data URI", function() {
+    test("load Remote URL", function() {
         expect(3);
 
         UserImageCache.load(IMAGE_URL, loadFailed);
@@ -131,6 +132,30 @@ $(document).ready(function(){
 
     test("load Mock File", function() {
         expect(3);
+
+        UserImageCache.load(new File(), loadFailed);
+
+        equals(UserImageCache.getEntryId(), VALID_PAGE_STORE, "getEntryName");
+        equals(UserImageCache.getDisplayName(), MOCK_NAME, "getDisplayName");
+        equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
+    });
+
+
+    test("load With Proxy", function() {
+        expect(9);
+
+        UserImageCache.setRemoteProxy(REMOTE_PROXY);
+        UserImageCache.load(ONE_PX_IMAGE, loadFailed);
+
+        equals(UserImageCache.getEntryId(), ONE_PX_IMAGE, "getEntryName");
+        equals(UserImageCache.getDisplayName(), ONE_PX_IMAGE, "getDisplayName");
+        equals(UserImageCache.getSrc(), ONE_PX_IMAGE, "getSrc");
+
+        UserImageCache.load(IMAGE_URL + "&%20", loadFailed);
+
+        equals(UserImageCache.getEntryId(), IMAGE_URL + "&%20", "getEntryName");
+        equals(UserImageCache.getDisplayName(), IMAGE_URL + "&%20", "getDisplayName");
+        equals(UserImageCache.getSrc(), REMOTE_PROXY + encodeURIComponent(IMAGE_URL) + "%26%2520", "getSrc");
 
         UserImageCache.load(new File(), loadFailed);
 
