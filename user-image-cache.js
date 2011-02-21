@@ -49,21 +49,22 @@ var UserImageCache;
                 },
                 storeImage: function(name, data) {
                     var count = this.count(),
-                        entryId = count+1;
+                        entryId = count+1,
+                        lru;
 
                     do {
                         try {
                             sessionStorage.setItem("imageList-src-" + entryId, data);
                             sessionStorage.setItem("imageList-display-" + entryId, name);
 
-                            var lru = this.lru();
+                            lru = this.lru();
                             lru.push(entryId);
                             this.lru(lru);
 
                             break;
                         } catch (err) {
                             // Cache filled, remove the least recently used
-                            var lru = this.lru();
+                            lru = this.lru();
                             sessionStorage.removeItem("imageList-src-" + lru[0]);
                             sessionStorage.removeItem("imageList-display-" + lru[0]);
                             lru.shift();
